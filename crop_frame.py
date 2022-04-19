@@ -48,4 +48,9 @@ def frame_crop(input, output, back):
             cv2.imwrite(output[0] + "_1." + output[1], original[y+adjustment:y + (h-adjustment), x+adjustment:x + (w-adjustment)])
             return (output[0] + "_1." + output[1])   
     except Exception as e:
-        print(e)
+        # print(e)
+        if back == True:
+            print("Error encountered with back frame cropping.")
+        else:
+            print("Error encountered with front frame cropping.")
+        return False

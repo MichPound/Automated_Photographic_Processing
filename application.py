@@ -11,6 +11,7 @@ import re
 import time
 import pandas as pd
 import tensorflow as tf
+import csv
 
 
 # Imports cropping scripts.
@@ -165,11 +166,15 @@ def process():
     # Loads in text detection model.
     net = cv2.dnn.readNet("C:/Users/michw/Documents/fyp/main/frozen_east_text_detection.pb")
 
+    # Initislise manual review list.
+    manual_review_list = []
+
     # Loops through each file in input directory.
     for file in sorted(os.listdir(input)):
 
         # Incrememnts file number.
         file_number += 1
+        filename = ""
 
         # Checks if current file is set to be front image.
         if file_number == int(variable1.get()):
@@ -199,6 +204,8 @@ def process():
             # OCR extraction for lot numbers.
             if check_2.get() == 1:
                 filename = ocr_extract(input + "/" + ocr_file, net)
+
+                if filename == "": filename = str(file_count)
             else:
                 filename = str(file_count)
 
@@ -220,6 +227,14 @@ def process():
                 cropped = frame_crop(front_file, filename, False)
             else:
                 cropped = frame_crop(front_file, filename, False)
+
+            # If exception was caught add to manual review list.
+            if cropped == False:
+
+                manual_review_list.append([filename, front_file, "Front Frame Crop"])
+
+                print("")
+                continue
 
             # Detecting average colour of frame edges.
             colour = colour_detect(cropped)
@@ -253,14 +268,37 @@ def process():
                         background_width = 150
                     
                     # Creating scaled image.
-                    scaled(cropped, background, background_width, frame_width, output, filename)
+                    scale_img = scaled(cropped, background, background_width, frame_width, output, filename)
+
+                    if scale_img == False:
+
+                        manual_review_list.append([filename, front_file, "Frame Scaling"])
+
+                        print("")
+                        continue
+                    
                 ######################################################
 
             # Creating artwork crop.
-            art_crop(cropped, filename)
+            art_cropped = art_crop(cropped, filename)
+
+            # If exception was caught add to manual review list.
+            if art_cropped == False:
+                    
+                manual_review_list.append([filename, front_file, "Artwork Crop"])
+
+                print("")
+                continue
 
             # Back Image.
             back = frame_crop(back_file, filename, True)
+
+            # If exception was caught add to manual review list.
+            if back == False:
+
+                manual_review_list.append([filename, back_file, "Back Frame Crop"])
+                print("")
+                continue
 
             # Checks if back text extraction is enabled.
             if check_1.get() == 1:
@@ -279,6 +317,21 @@ def process():
 
             # Cleans up terminal output.
             print(" ")
+
+    # If manual review list is not empty, create manual review CSV.
+    if manual_review_list != []:
+
+        print("Creating Manual Review CSV")
+
+        header = ["Lot", "File", "Issue"]
+
+        with open(output + "/manual_review.csv", "w") as csvfile:
+            
+            writer = csv.writer(csvfile)
+
+            writer.writerow(header)
+
+            writer.writerows(manual_review_list)
 
     # Ends procesing timer.
     end = time.time()
@@ -302,7 +355,8 @@ def frame_crop(file, filename, back):
 
 # Artwork frame crops.
 def art_crop(cropped, filename):
-    crop_art.art_crop(cropped, output + "/" + filename + ".jpg")
+    crop = crop_art.art_crop(cropped, output + "/" + filename + ".jpg")
+    return crop
 
 # Creates OCR text file.
 def ocr_extract(file, net):

@@ -42,5 +42,8 @@ def art_crop(input, output):
     try:
         output = output.split('.')
         cv2.imwrite(output[0] + "_2." + output[1], original[y2:y2 + h2, x2:x2 + w2])
+        return (output[0] + "_2." + output[1])   
     except Exception as e:
-        print(e)
+        # print(e)
+        print("Error encountered with artwork cropping.")
+        return False

@@ -37,4 +37,10 @@ def scaled(cropped, background, background_width, frame_width, output, filename)
     background2.paste(frame2, (int(pasteX), int(pasteY)))
 
     # Save the new scaled photograph.
-    background2.save(output + "/" + filename + "_4.jpg")
+    try:
+        background2.save(output + "/" + filename + "_4.jpg")
+        return (output + "/" + filename + "_4.jpg")
+    except Exception as e:
+        # print(e)
+        print("There was an error with scaled shot.")
+        return False
