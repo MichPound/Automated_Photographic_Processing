@@ -25,7 +25,7 @@ from ocr import simple_ocr
 from scaled_shot import scaled
 
 # Loads in CNN model.
-model = tf.keras.models.load_model("model_no5")
+model = tf.keras.models.load_model("19-04-22-1127")
 
 
 # GUI setup.
@@ -267,10 +267,9 @@ def process():
                 temp_text = simple_ocr(back)
 
                 # Cleans any text found.
-                re.sub(' +', ' ', temp_text)
-                re.sub('\n', '', temp_text)
-                re.sub('\r', '', temp_text)
-                re.sub('\t', '', temp_text)
+                temp_text = re.sub(' +', ' ', temp_text)
+                temp_text = re.sub('\r', '', temp_text)
+                temp_text = re.sub('\t', '', temp_text)
 
                 # If text is found, create text file.
                 if temp_text != "":
