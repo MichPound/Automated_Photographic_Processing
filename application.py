@@ -205,28 +205,16 @@ def process():
             if check_2.get() == 1:
                 filename = ocr_extract(input + "/" + ocr_file, net)
 
-                if filename == "": filename = str(file_count)
+                # Cleans lot number to be only numerical characters.
+                filename = re.sub(r'[^0-9]', '', filename)
+
+                if filename == "": filename = "-" + str(file_count)
             else:
                 filename = str(file_count)
 
-            # Set up and prediction of CNN model.
-            #####################################
-            CATEGORIES = ['2_contour', '3_contour']
+            print("Lot Number: ", filename)
 
-            prediction = model.predict([[prepare(input + "/" + front_file)]])
-
-            predicted_class = np.argmax(prediction)
-
-            print(CATEGORIES[predicted_class])
-            #####################################
-
-            #Front Image.---------------------(Update with new scripts!!!!!)
-            if CATEGORIES[predicted_class] == '2_contour':
-                cropped = frame_crop(front_file, filename, False)
-            elif CATEGORIES[predicted_class] == '3_contour':
-                cropped = frame_crop(front_file, filename, False)
-            else:
-                cropped = frame_crop(front_file, filename, False)
+            cropped = frame_crop(front_file, filename, False)
 
             # If exception was caught add to manual review list.
             if cropped == False:
@@ -238,6 +226,62 @@ def process():
 
             # Detecting average colour of frame edges.
             colour = colour_detect(cropped)
+
+             # Set up and prediction of CNN model.
+            #####################################
+            CATEGORIES = ['type_one', 'type_two']
+
+            prediction = model.predict([[prepare(cropped)]])
+
+            predicted_class = np.argmax(prediction)
+
+            print("Frame Classification: ", CATEGORIES[predicted_class])
+            #####################################
+
+            # Creating artwork crop.
+            if (CATEGORIES[predicted_class] == 'type_one') and (colour == "Lighter"):
+                art_cropped = art_crop(cropped, filename, True)
+            elif (CATEGORIES[predicted_class] == 'type_one') and (colour == "Darker"):
+                art_cropped = dark_art_crop(cropped, filename, True)
+            elif CATEGORIES[predicted_class] == 'type_two' and (colour == "Lighter"):
+                art_cropped = art_crop(cropped, filename, False)
+            elif CATEGORIES[predicted_class] == 'type_two' and (colour == "Darker"):
+                art_cropped = dark_art_crop(cropped, filename, False)
+            else:
+                art_cropped == False
+
+            # If exception was caught add to manual review list.
+            if art_cropped == False:
+                    
+                manual_review_list.append([filename, front_file, "Artwork Crop"])
+
+                print("")
+                continue
+
+            # Back Image.
+            back = frame_crop(back_file, filename, True)
+
+            # If exception was caught add to manual review list.
+            if back == False:
+
+                manual_review_list.append([filename, back_file, "Back Frame Crop"])
+                print("")
+                continue
+
+            # Checks if back text extraction is enabled.
+            if check_1.get() == 1:
+                temp_text = simple_ocr(back)
+
+                # Cleans any text found.
+                temp_text = re.sub(' +', ' ', temp_text)
+                temp_text = re.sub('\r', '', temp_text)
+                temp_text = re.sub('\t', '', temp_text)
+
+                # If text is found, create text file.
+                if temp_text != "":
+                    text_file = open(output + "/" + filename + ".txt", "w")
+                    text_file.write(temp_text)
+                    text_file.close()
 
             # Checks if scaled images is selected.
             if check_3.get() == 1:
@@ -279,42 +323,6 @@ def process():
                     
                 ######################################################
 
-            # Creating artwork crop.
-            art_cropped = art_crop(cropped, filename)
-
-            # If exception was caught add to manual review list.
-            if art_cropped == False:
-                    
-                manual_review_list.append([filename, front_file, "Artwork Crop"])
-
-                print("")
-                continue
-
-            # Back Image.
-            back = frame_crop(back_file, filename, True)
-
-            # If exception was caught add to manual review list.
-            if back == False:
-
-                manual_review_list.append([filename, back_file, "Back Frame Crop"])
-                print("")
-                continue
-
-            # Checks if back text extraction is enabled.
-            if check_1.get() == 1:
-                temp_text = simple_ocr(back)
-
-                # Cleans any text found.
-                temp_text = re.sub(' +', ' ', temp_text)
-                temp_text = re.sub('\r', '', temp_text)
-                temp_text = re.sub('\t', '', temp_text)
-
-                # If text is found, create text file.
-                if temp_text != "":
-                    text_file = open(output + "/" + filename + ".txt", "w")
-                    text_file.write(temp_text)
-                    text_file.close()
-
             # Cleans up terminal output.
             print(" ")
 
@@ -354,8 +362,13 @@ def frame_crop(file, filename, back):
     return crop
 
 # Artwork frame crops.
-def art_crop(cropped, filename):
-    crop = crop_art.art_crop(cropped, output + "/" + filename + ".jpg")
+def art_crop(cropped, filename, type_one):
+    crop = crop_art.art_crop(cropped, output + "/" + filename + ".jpg", type_one)
+    return crop
+
+# Artwork dark frame crops.
+def dark_art_crop(cropped, filename, type_one):
+    crop = crop_art.dark_art_crop(cropped, output + "/" + filename + ".jpg", type_one)
     return crop
 
 # Creates OCR text file.
@@ -394,15 +407,15 @@ def colour_detect(image):
 
     # Checks if average colour is in range.
     lower = np.array([0, 0, 0])
-    upper = np.array([150, 150, 200])
+    upper = np.array([100, 100, 100])
     mask = cv2.inRange(average, lower, upper)
 
     # Returns measure of frame colour.
     if np.array_equal(mask, np.array([[0], [0], [0]]), equal_nan=False):
-        print("Lighter Frame")
+        print("Frame Colour: Lighter")
         return "Lighter"
     else:
-        print("Darker Frame")
+        print("Frame Colour: Darker")
         return "Darker"
 
 # Input directory selection button.

@@ -20,7 +20,7 @@ def frame_crop(input, output, back):
     # Finding all contours in processed image.
     contours, hierarchy = cv2.findContours(col_range, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     
-    # Initialise 2 largest contours.
+    # Initialise largest contours.
     select1 = (0, 0, 0, 0)
 
     # Finding the largest contour.
@@ -35,7 +35,7 @@ def frame_crop(input, output, back):
     x, y, w, h = select1
 
     # Adjustment value for cleaning up the cropped image edges.
-    adjustment = 7
+    adjustment = 10
 
     # Crop the image to the largest contour.
     # Check if back flag is set and adjust file naming.

@@ -104,6 +104,9 @@ def advanced_ocr(filename, net):
     # Uses NMS to handle overlapping text boxes.
     boxes = non_max_suppression(np.array(rects))
 
+    # Limited to first 250 boxes.
+    boxes = boxes[0:250]
+
     # Initialise list for all extracted text.
     all_text = []
 
@@ -124,8 +127,17 @@ def advanced_ocr(filename, net):
         # While tesseract returns blank text increase padding by 5 pixels until text extracted.
         while cleaned_text == "":
 
+            # Limits max padding size.
+            if padding == 50: break
+
+            # Limits max number of extracted text.
+            if len(all_text) >= 4: break
+
             # Cropping text box out of original image.
             square_text = original[top_y - padding:bottom_y + padding, top_x - padding:bottom_x + padding]
+
+            if square_text.shape[0] == 0 or square_text.shape[1] == 0:
+                break
 
             # Pre-processing.
             square_text = cv2.cvtColor(square_text, cv2.COLOR_BGR2GRAY)
@@ -143,7 +155,8 @@ def advanced_ocr(filename, net):
         # Building list of all text extracted.
         all_text.append(cleaned_text)
 
-    print("LOT number: " + all_text[3])
-
     # Return specific lot number text box.
-    return all_text[3]
+    if len(all_text) < 4:
+        return ""
+    else:
+        return all_text[3]
