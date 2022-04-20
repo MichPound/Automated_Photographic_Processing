@@ -28,6 +28,11 @@ from scaled_shot import scaled
 # Loads in CNN model.
 model = tf.keras.models.load_model("19-04-22-1127")
 
+print("")
+print("#################################")
+print("Automated Photographic Processing")
+print("#################################")
+print("")
 
 # GUI setup.
 root = tk.Tk()
@@ -148,13 +153,15 @@ def process():
         measurementsPD = pd.read_csv(measurements)
 
         # Loading background images.
-        dark_large = cv2.imread("C:/Users/michw/Documents/fyp/main/28_3500_12.jpg")
-        dark_small = cv2.imread("C:/Users/michw/Documents/fyp/main/50_005c.jpg")
-        light_large = cv2.imread("C:/Users/michw/Documents/fyp/main/28_4500_17.jpg")
-        light_small = cv2.imread("C:/Users/michw/Documents/fyp/main/50_001.jpg")
+        dark_large = cv2.imread("28_3500_12.jpg")
+        dark_small = cv2.imread("50_005c.jpg")
+        light_large = cv2.imread("28_4500_17.jpg")
+        light_small = cv2.imread("50_001.jpg")
 
     # Starts procesing timer.
     start = time.time()
+
+    print("")
 
     # Initialises variables.
     file_number = 0
@@ -164,7 +171,7 @@ def process():
     file_count = 0
 
     # Loads in text detection model.
-    net = cv2.dnn.readNet("C:/Users/michw/Documents/fyp/main/frozen_east_text_detection.pb")
+    net = cv2.dnn.readNet("frozen_east_text_detection.pb")
 
     # Initislise manual review list.
     manual_review_list = []
