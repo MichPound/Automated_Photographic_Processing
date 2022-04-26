@@ -28,6 +28,8 @@ from scaled_shot import scaled
 # Loads in CNN model.
 model = tf.keras.models.load_model("19-04-22-1127")
 
+
+os.system('cls' if os.name == 'nt' else 'clear')
 print("")
 print("#################################")
 print("Automated Photographic Processing")
@@ -310,13 +312,13 @@ def process():
                         background_width = 500
                     elif (colour == "Lighter") & (frame_width <= 120):
                         background = dark_small
-                        background_width = 200
+                        background_width = 180
                     elif (colour == "Darker") & (frame_width > 120):
                         background = light_large
                         background_width = 450
                     elif (colour == "Darker") & (frame_width <= 120):
                         background = light_small
-                        background_width = 150
+                        background_width = 175
                     
                     # Creating scaled image.
                     scale_img = scaled(cropped, background, background_width, frame_width, output, filename)
@@ -486,7 +488,7 @@ option3.place(x=450, y=150)
 
 # Checkbutton for frame back text extraction.
 check_1 = IntVar()
-recognition_check = Checkbutton(root, text="Text Recognition", variable=check_1)
+recognition_check = Checkbutton(root, text="Artist's Notes", variable=check_1)
 recognition_check.place(x=18, y=215)
 
 # Checkbutton for lot number extraction.
